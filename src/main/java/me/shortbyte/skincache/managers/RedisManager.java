@@ -16,30 +16,30 @@ public class RedisManager {
     private final SkinCache plugin;
 
     private Jedis jedis;
-    
+
     public RedisManager(SkinCache plugin) {
         this.plugin = plugin;
         init();
     }
-    
+
     private void init() {
         jedis = new Jedis("HOSTNAME", 6379, 10000);
-        jedis.auth("PASSWORD");
+        jedis.auth("PASSWORD"); // BLABLABLA
         jedis.select(0);
         jedis.connect();
-        
+
         System.out.println("  >> Redis connected!");
     }
-    
+
     public String getSkin(String uuid) {
-        try {            
+        try {
             return jedis.get("skin:" + uuid);
         } catch (Exception ex) {
             init();
             return getSkin(uuid);
         }
     }
-    
+
     public void setSkin(String uuid, Skin skin) {
         JSONObject json = new JSONObject();
         json.put("name", skin.getName());
