@@ -1,8 +1,8 @@
 package me.shortbyte.skincache;
 
 import me.shortbyte.skincache.managers.RedisManager;
-import me.shortbyte.skincache.misc.Skin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.configuration.file.FileConfiguration;
 
 /**
  *
@@ -12,25 +12,14 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class SkinCache extends JavaPlugin {
 
-    private RedisManager redisManager;
-
-    private Listeners listeners;
     
     @Override
     public void onEnable() {
-        init();
-    }
-
-    private void init() {
-        this.redisManager = new RedisManager(this);
-        this.listeners = new Listeners(this);
-    }
-
-    public RedisManager getRedisManager() {
-        return redisManager;
-    }
-
-    public Skin getSkin(String uuid) {
-        return new Skin(this, uuid);
+        this.saveDefaultConfig();
+        final FileConfiguration conf = this.getConfig();
+        final RedisManager manager = new RedisManager(conf);
+        final Listeners listeners = new Listeners(manager);
+        
+        getServer().getPluginManager().registerEvents(listeners, this);
     }
 }

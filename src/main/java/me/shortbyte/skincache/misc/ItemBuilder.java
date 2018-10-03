@@ -21,37 +21,32 @@ import org.bukkit.inventory.meta.SkullMeta;
  */
 public class ItemBuilder {
 
-    private Class<?> skullMetaClass;
-
-    private ItemStack itemStack;
-
-    public static ItemBuilder getItem(Material material) {
-        return new ItemBuilder(material);
-    }
-
-    public static ItemBuilder getItem(Material material, int amount) {
-        return new ItemBuilder(material, amount);
-    }
-
-    public static ItemBuilder getItem(Material material, int amount, short damage) {
-        return new ItemBuilder(material, amount, damage);
-    }
+    private static Class<?> skullMetaClass;
     
+    static {
+        final String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+        try {
+            skullMetaClass = Class.forName("org.bukkit.craftbukkit." + version + ".inventory.CraftMetaSkull");
+        } catch (ClassNotFoundException e) {
+            Logger.getLogger(ItemBuilder.class.getName()).log(Level.SEVERE, null, e);
+            skullMetaClass = null;
+        }
+    }
+
+    private final ItemStack itemStack;
+
     public ItemBuilder(Material material) {
-        setClasses();
         this.itemStack = new ItemStack(material);
     }
 
     public ItemBuilder(Material material, int amount) {
-        setClasses();
         this.itemStack = new ItemStack(material, amount);
     }
 
     public ItemBuilder(Material material, int amount, short damage) {
-        setClasses();
         this.itemStack = new ItemStack(material, amount, damage);
     }
-    
+
     public ItemBuilder setDisplayName(String name) {
         ItemMeta meta = itemStack.getItemMeta();
         meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
@@ -59,9 +54,12 @@ public class ItemBuilder {
         return this;
     }
 
-    public ItemBuilder setSkullOwner(Skin skin) {
-        if (skin.getName() != null && skin.getValue() != null)
+    public ItemBuilder setSkullOwner(Skin skin) throws IllegalStateException {
+        if (skin.getName() != null && skin.getValue() != null) {
             if (itemStack.getType() == Material.SKULL_ITEM) {
+                if (skullMetaClass == null) {
+                    throw new IllegalStateException("Can not access Skull Meta Data");
+                }
                 SkullMeta skullMeta = (SkullMeta) itemStack.getItemMeta();
                 GameProfile gameProfile = new GameProfile(UUID.fromString(skin.getUuid()), "skin");
                 gameProfile.getProperties().clear();
@@ -73,9 +71,11 @@ public class ItemBuilder {
                     field.set(skullMeta, gameProfile);
                 } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException ex) {
                     Logger.getLogger(ItemBuilder.class.getName()).log(Level.SEVERE, null, ex);
+                    throw new IllegalStateException("Can not access Skull Meta Data");
                 }
                 itemStack.setItemMeta(skullMeta);
             }
+        }
         return this;
     }
 
@@ -83,11 +83,4 @@ public class ItemBuilder {
         return itemStack;
     }
 
-    private void setClasses() {
-        String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-        try {
-            skullMetaClass = Class.forName("org.bukkit.craftbukkit." + version + ".inventory.CraftMetaSkull");
-        } catch (ClassNotFoundException e) {
-        }
-    }
 }
